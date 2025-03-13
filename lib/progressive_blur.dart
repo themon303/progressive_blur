@@ -102,17 +102,17 @@ class _ProgressiveBlurWidgetState extends State<ProgressiveBlurWidget> {
       return;
     }
 
-    var _shouldCreateBlurTexture = false;
+    var shouldCreateBlurTexture = false;
 
     if (widget.blurTextureDimensions != oldWidget.blurTextureDimensions) {
-      _shouldCreateBlurTexture = true;
+      shouldCreateBlurTexture = true;
     }
 
     if (widget.linearGradientBlur != oldWidget.linearGradientBlur) {
-      _shouldCreateBlurTexture = true;
+      shouldCreateBlurTexture = true;
     }
 
-    if (_shouldCreateBlurTexture) {
+    if (shouldCreateBlurTexture) {
       _maybeCreateBlurTexture();
     }
   }

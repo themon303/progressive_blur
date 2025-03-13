@@ -1,5 +1,3 @@
-import 'dart:ui' as ui;
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:progressive_blur/progressive_blur.dart';
 
@@ -19,28 +17,6 @@ class _AppState extends State<App> {
   var _sigma = 0.0;
   var _startStop = 0.0;
   var _endStop = 1.0;
-
-  ui.Image _createBlurTexture() {
-    final recorder = ui.PictureRecorder();
-    final canvas = ui.Canvas(recorder);
-
-    final gradient =
-        ui.Gradient.linear(const Offset(0, 0), const Offset(0, 1000), <Color>[
-      Colors.black,
-      Colors.white,
-    ], [
-      _startStop,
-      _endStop,
-    ]);
-
-    final paint = ui.Paint()..shader = gradient;
-    canvas.drawRect(Offset.zero & const Size(1000, 1000), paint);
-
-    final picture = recorder.endRecording();
-    final image = picture.toImageSync(1000, 1000);
-
-    return image;
-  }
 
   @override
   Widget build(BuildContext context) {
