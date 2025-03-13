@@ -4,4 +4,5 @@ WIP. Progressive Gaussian blur implementation in Flutter using fragment shaders.
 
 The performance probably sucks :(
 
-![Demo image](images/image1.png)
+![Demo image 2](images/image2.png)
+![Demo image 1](images/image1.png)
