@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:progressive_blur/progressive_blur.dart';
 
 Future<void> main() async {
-  await ProgressiveBlur.precache();
+  await ProgressiveBlurWidget.precache();
   runApp(const App());
 }
 
@@ -44,14 +44,20 @@ class _AppState extends State<App> {
 
   @override
   Widget build(BuildContext context) {
-    final child = Image.network(
-      'https://images.pexels.com/photos/147411/italy-mountains-dawn-daybreak-147411.jpeg?cs=srgb&dl=pexels-pixabay-147411.jpg&fm=jpg',
-      width: 600,
-      height: 600,
-      fit: BoxFit.cover,
-    );
+    const dimensions = 800.0;
 
-    // final child = AnimatedChildWidget();
+    final child = Padding(
+      padding: const EdgeInsets.all(128.0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(32.0),
+        child: Image.network(
+          'https://images.pexels.com/photos/147411/italy-mountains-dawn-daybreak-147411.jpeg?cs=srgb&dl=pexels-pixabay-147411.jpg&fm=jpg',
+          width: dimensions,
+          height: dimensions,
+          fit: BoxFit.cover,
+        ),
+      ),
+    );
 
     return MaterialApp(
       theme: ThemeData.from(
@@ -61,6 +67,7 @@ class _AppState extends State<App> {
         ),
       ),
       home: Scaffold(
+        backgroundColor: const Color.fromRGBO(13, 17, 22, 1.0),
         appBar: AppBar(
           title: const Text('Example'),
         ),
@@ -73,10 +80,10 @@ class _AppState extends State<App> {
                   children: [
                     Container(
                       width: 24.0,
-                      height: 600.0,
+                      height: dimensions,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Colors.white, Colors.black],
+                          colors: const [Colors.white, Colors.black],
                           stops: [_startStop, _endStop],
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
@@ -84,7 +91,7 @@ class _AppState extends State<App> {
                       ),
                     ),
                     SizedBox(
-                      height: 648.0,
+                      height: dimensions + 48.0,
                       child: RotatedBox(
                         quarterTurns: 1,
                         child: RangeSlider(
@@ -99,17 +106,16 @@ class _AppState extends State<App> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 64.0),
-                    ProgressiveBlur(
-                      blurTexture: _createBlurTexture(),
-                      sigma: _sigma,
-                      child: child,
-                    ),
                     const SizedBox(width: 32.0),
-                    NaiveProgressiveBlur(
+                    ProgressiveBlurWidget(
+                      linearGradientBlur: LinearGradientBlur(
+                        values: [0, 1],
+                        stops: [_startStop, _endStop],
+                        start: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
                       sigma: _sigma,
-                      startStop: _startStop,
-                      endStop: _endStop,
+                      blurTextureDimensions: 1024,
                       child: child,
                     ),
                   ],
@@ -126,108 +132,6 @@ class _AppState extends State<App> {
               },
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class NaiveProgressiveBlur extends StatelessWidget {
-  const NaiveProgressiveBlur({
-    super.key,
-    required this.sigma,
-    required this.startStop,
-    required this.endStop,
-    required this.child,
-  });
-
-  final double sigma;
-  final double startStop;
-  final double endStop;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRect(
-      child: Stack(
-        clipBehavior: Clip.antiAlias,
-        fit: StackFit.passthrough,
-        alignment: Alignment.bottomCenter,
-        children: <Widget>[
-          child,
-          ImageFiltered(
-            imageFilter: ImageFilter.blur(
-              sigmaX: sigma,
-              sigmaY: sigma,
-            ),
-            child: ShaderMask(
-              shaderCallback: (rect) {
-                return LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.black, Colors.black.withOpacity(0)],
-                  stops: [startStop, endStop],
-                ).createShader(rect);
-              },
-              blendMode: BlendMode.dstOut,
-              child: child,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class AnimatedChildWidget extends StatefulWidget {
-  const AnimatedChildWidget({super.key});
-
-  @override
-  State<AnimatedChildWidget> createState() => _AnimatedChildWidgetState();
-}
-
-class _AnimatedChildWidgetState extends State<AnimatedChildWidget>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _animation;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
-
-    _animation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox.square(
-      dimension: 240.0,
-      child: AnimatedBuilder(
-        animation: _animation,
-        builder: (context, child) {
-          return Transform.scale(
-            scale: 1 + _animation.value * 0.5,
-            child: child,
-          );
-        },
-        child: const Icon(
-          Icons.favorite,
-          size: 160.0,
-          color: Colors.red,
         ),
       ),
     );
