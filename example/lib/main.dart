@@ -145,7 +145,7 @@ class _MainPageState extends State<MainPage> {
   }
 }
 
-class _AlbumCard extends StatelessWidget {
+class _AlbumCard extends StatefulWidget {
   const _AlbumCard({
     super.key,
     required this.imageUrl,
@@ -160,13 +160,24 @@ class _AlbumCard extends StatelessWidget {
   final String artist;
 
   @override
+  State<_AlbumCard> createState() => _AlbumCardState();
+}
+
+class _AlbumCardState extends State<_AlbumCard>
+    with AutomaticKeepAliveClientMixin {
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
+
     final child = AspectRatio(
       aspectRatio: 1.0,
-      child: Image.network(
-        imageUrl,
-        fit: BoxFit.cover,
-        errorBuilder: (context, _, __) => Container(color: Colors.black),
+      child: Container(
+        color: Colors.grey,
+        child: Image.network(
+          widget.imageUrl,
+          fit: BoxFit.cover,
+          errorBuilder: (context, _, __) => Container(color: Colors.black),
+        ),
       ),
     );
 
@@ -214,7 +225,7 @@ class _AlbumCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                title,
+                widget.title,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: cupertinoTheme.textTheme.navLargeTitleTextStyle.copyWith(
@@ -223,7 +234,7 @@ class _AlbumCard extends StatelessWidget {
                 ),
               ),
               Text(
-                artist,
+                widget.artist,
                 style: cupertinoTheme.textTheme.textStyle.copyWith(
                   color: Colors.white38,
                   fontSize: 14.0,
@@ -235,4 +246,7 @@ class _AlbumCard extends StatelessWidget {
       ],
     );
   }
+
+  @override
+  bool get wantKeepAlive => true;
 }
