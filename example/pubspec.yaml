@@ -12,6 +12,7 @@ dependencies:
 
   cupertino_icons: ^1.0.8
   figma_squircle: ^0.6.3
+  flutter_map: ^8.1.1
   progressive_blur:
     path: ..
 

@@ -1,10 +1,10 @@
 import 'dart:convert';
-import 'dart:ui' as ui;
 
 import 'package:example/albums.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:progressive_blur/progressive_blur.dart';
 
 Future<void> main() async {
@@ -17,12 +17,14 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return CupertinoApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.from(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.purple,
-          brightness: Brightness.dark,
+      theme: MaterialBasedCupertinoThemeData(
+        materialTheme: ThemeData.from(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.blue,
+            brightness: Brightness.light,
+          ),
         ),
       ),
       home: const MainPage(),
@@ -38,6 +40,7 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  var _displayIndex = 0;
   final _albums = <(String, String, String, String)>[];
 
   @override
@@ -59,109 +62,85 @@ class _MainPageState extends State<MainPage> {
     }
   }
 
-  ui.Image _progBlurTexture() {
-    final gradient = ui.Gradient.radial(
-      const Offset(1000, 1000),
-      750,
-      [Colors.white, Colors.black],
-    );
-
-    final size = Size.square(2000.0);
-
-    final paint = Paint()..shader = gradient;
-
-    final recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder);
-
-    canvas.drawRect(Offset.zero & size, paint);
-    return recorder
-        .endRecording()
-        .toImageSync(size.width.toInt(), size.height.toInt());
-  }
-
   @override
   Widget build(BuildContext context) {
-    final cupertinoTheme = CupertinoTheme.of(context);
+    final child = switch (_displayIndex) {
+      0 => CustomScrollView(
+          slivers: [
+            const CupertinoSliverNavigationBar(
+              largeTitle: Text('Music'),
+              border: Border(),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.all(16.0),
+              sliver: SliverLayoutBuilder(
+                builder: (context, constraints) {
+                  const preferredItemSize = 160.0;
+                  final crossAxisCount =
+                      (constraints.crossAxisExtent / preferredItemSize).floor();
+
+                  return SliverGrid.builder(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: crossAxisCount,
+                      mainAxisSpacing: 16.0,
+                      crossAxisSpacing: 16.0,
+                      childAspectRatio: 1.0,
+                    ),
+                    itemCount: _albums.length,
+                    itemBuilder: (context, index) {
+                      final album = _albums[index];
+
+                      return _AlbumCard(
+                        key: ValueKey(album.$1),
+                        imageUrl: album.$1,
+                        redirectUrl: album.$2,
+                        title: album.$3,
+                        artist: album.$4,
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      1 => FlutterMap(
+          children: [
+            ProgressiveBlurWidget(
+              sigma: 16.0,
+              linearGradientBlur: const LinearGradientBlur(
+                values: [1, 0],
+                stops: [0, 0.125],
+                start: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+              child: TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.kekland.progressive_blur_example',
+              ),
+            ),
+          ],
+        ),
+      _ => throw Exception('Invalid index'),
+    };
 
     return Scaffold(
-      backgroundColor: Color(0xFF0D1116),
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            const minItemExtent = 192.0;
-            final width = constraints.maxWidth;
-            final crossAxisCount = (width / minItemExtent).floor();
-
-            return Stack(
-              children: [
-                ProgressiveBlurWidget.custom(
-                  blurTexture: _progBlurTexture(),
-                  sigma: 64.0,
-                  child: Stack(
-                    children: [
-                      GridView.builder(
-                        clipBehavior: Clip.none,
-                        padding: const EdgeInsets.all(192.0),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: crossAxisCount,
-                          crossAxisSpacing: 16.0,
-                          mainAxisSpacing: 16.0,
-                          childAspectRatio: 1.0,
-                        ),
-                        itemCount: 45,
-                        itemBuilder: (context, index) {
-                          final album = _albums.skip(0).elementAt(index);
-                          return _AlbumCard(
-                            imageUrl: album.$1,
-                            redirectUrl: album.$2,
-                            title: album.$3,
-                            artist: album.$4,
-                          );
-                        },
-                      ),
-                      Center(
-                        child: Transform.scale(
-                          scaleX: 2.0,
-                          child: Container(
-                            width: 400.0,
-                            height: 400.0,
-                            decoration: BoxDecoration(
-                              gradient: RadialGradient(
-                                center: Alignment.center,
-                                colors: [
-                                  Color(0xFF0D1116),
-                                  Colors.transparent,
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Center(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const FlutterLogo(size: 96.0),
-                      const SizedBox(width: 16.0),
-                      Text(
-                        'progressive_blur',
-                        style: cupertinoTheme.textTheme.navLargeTitleTextStyle
-                            .copyWith(
-                          color: Colors.white,
-                          fontSize: 64.0,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
+      bottomNavigationBar: CupertinoTabBar(
+        currentIndex: _displayIndex,
+        onTap: (index) => setState(() => _displayIndex = index),
+        iconSize: 22.0,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(CupertinoIcons.music_note),
+            label: 'Music',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(CupertinoIcons.map),
+            label: 'Map',
+          ),
+        ],
       ),
+      body: child,
     );
   }
 }
@@ -196,20 +175,6 @@ class _AlbumCard extends StatelessWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        Opacity(
-          opacity: 0.135,
-          child: Transform.scale(
-            scale: 2.0,
-            child: ImageFiltered(
-              imageFilter: ui.ImageFilter.blur(
-                sigmaX: 32.0,
-                sigmaY: 32.0,
-                tileMode: TileMode.decal,
-              ),
-              child: child,
-            ),
-          ),
-        ),
         ClipSmoothRect(
           radius: SmoothBorderRadius(
             cornerRadius: 32,
