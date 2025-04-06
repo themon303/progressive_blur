@@ -1,5 +1,5 @@
 name: progressive_blur
-description: "A new Flutter package project."
+description: "(Experimental) Progressive blur implementation in Flutter."
 version: 0.0.1
 homepage: https://github.com/kekland/progressive_blur
 
